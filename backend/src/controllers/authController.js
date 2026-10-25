@@ -2,10 +2,23 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { user, recipe, saved_recipe, user_allergy, user_favorite_category, user_activity_history, sequelize } = require("../models");
 const { invalidateUserCache } = require("../middlewares/authMiddleware");
+const { uploadAvatarImage, removeStoredImage } = require("../services/storageService");
 
 // JWT Secret from env or default
 // Không có giá trị dự phòng: server.js đã chặn khởi động khi thiếu JWT_SECRET
 const JWT_SECRET = process.env.JWT_SECRET;
+
+// Thời hạn 1 phiên đăng nhập. App tự xin token mới (POST /auth/refresh) mỗi lần mở
+// → còn dùng app ít nhất 1 lần trong khoảng này thì không bị đăng xuất.
+const SESSION_TTL = process.env.SESSION_TTL || "7d";
+
+const signToken = (u) => jwt.sign({ id: u.id, role: u.role }, JWT_SECRET, { expiresIn: SESSION_TTL });
+
+const publicUser = (u) => {
+    const data = u.toJSON();
+    delete data.password_hash;
+    return data;
+};
 
 exports.register = async (req, res) => {
     try {
@@ -72,11 +85,7 @@ exports.login = async (req, res) => {
         }
 
 
-        const token = jwt.sign(
-            { id: foundUser.id, role: foundUser.role },
-            JWT_SECRET,
-            { expiresIn: "7d" }
-        );
+        const token = signToken(foundUser);
 
         const userData = foundUser.toJSON();
         delete userData.password_hash;
@@ -109,6 +118,21 @@ exports.getProfile = async (req, res) => {
     }
 };
 
+// POST /api/auth/refresh — gia hạn phiên: token còn hiệu lực → cấp token mới (30 ngày) + hồ sơ mới nhất.
+// authMiddleware đã chặn token hết hạn / tài khoản bị xoá hoặc khoá.
+exports.refreshSession = async (req, res) => {
+    try {
+        return res.status(200).json({
+            success: true,
+            token: signToken(req.user),
+            data: publicUser(req.user),
+        });
+    } catch (error) {
+        console.error("Refresh Session Error:", error);
+        return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
+
 exports.updateProfile = async (req, res) => {
     try {
         const { name, avatar_url } = req.body;
@@ -117,6 +141,8 @@ exports.updateProfile = async (req, res) => {
             name: name || req.user.name,
             avatar_url: avatar_url || req.user.avatar_url
         });
+        // Middleware cache thông tin user → xoá để lần gọi sau thấy ngay tên / ảnh mới
+        invalidateUserCache(req.user.id);
 
         const userData = req.user.toJSON();
         delete userData.password_hash;
@@ -129,6 +155,33 @@ exports.updateProfile = async (req, res) => {
     } catch (error) {
         console.error("Update Profile Error:", error);
         return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
+
+// POST /api/auth/avatar — tải ảnh đại diện (base64) lên Supabase Storage rồi cập nhật hồ sơ
+exports.uploadAvatar = async (req, res) => {
+    try {
+        const { base64, mime_type } = req.body || {};
+        if (!base64 || typeof base64 !== "string") {
+            return res.status(400).json({ success: false, message: "Thiếu dữ liệu ảnh." });
+        }
+        const oldUrl = req.user.avatar_url;
+        const url = await uploadAvatarImage(req.user.id, base64, mime_type);
+        await req.user.update({ avatar_url: url });
+        invalidateUserCache(req.user.id);
+        // Ảnh đại diện cũ của CHÍNH người này trong bucket → xoá cho gọn (chạy nền).
+        // Chỉ xoá trong thư mục avatars/<id>/ để không bao giờ xoá nhầm ảnh món ăn.
+        if (oldUrl && oldUrl !== url && oldUrl.includes(`/avatars/${req.user.id}/`)) removeStoredImage(oldUrl);
+
+        const userData = req.user.toJSON();
+        delete userData.password_hash;
+        return res.status(200).json({ success: true, message: "Đã cập nhật ảnh đại diện.", data: userData });
+    } catch (error) {
+        if (error.status) {
+            return res.status(error.status).json({ success: false, message: error.message });
+        }
+        console.error("Upload Avatar Error:", error);
+        return res.status(500).json({ success: false, message: "Không tải được ảnh lên. Vui lòng thử lại." });
     }
 };
 

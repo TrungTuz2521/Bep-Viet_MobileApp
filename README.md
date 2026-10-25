@@ -215,7 +215,7 @@ npx expo start --dev-client
 | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | ✅ | Kết nối PostgreSQL (dùng **Supabase pooler**, ví dụ `aws-0-ap-northeast-1.pooler.supabase.com`) |
 | `DB_POOL_MAX` | | Số kết nối tối đa (mặc định `10`) |
 | `JWT_SECRET` | ✅ | Chuỗi bí mật ký token (dài, ngẫu nhiên) |
-| `JWT_EXPIRES_IN` | | Hạn token, ví dụ `1d` |
+| `SESSION_TTL` | | Thời hạn phiên đăng nhập (mặc định `30d`). App tự gia hạn mỗi lần mở, nên chỉ bị đăng xuất khi không mở app quá khoảng này |
 | `GEMINI_API_KEY` | | Key Google Gemini cho trợ lý AI |
 | `GEMINI_MODEL`, `GEMINI_FALLBACK_MODELS` | | Model chính và model dự phòng (cách nhau dấu phẩy) |
 | `GEMINI_TEMPERATURE`, `GEMINI_THINKING_BUDGET`, `GEMINI_TIMEOUT_MS` | | Tinh chỉnh trợ lý |

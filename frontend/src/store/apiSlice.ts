@@ -233,6 +233,17 @@ export const apiSlice = createApi({
       }),
     }),
 
+    // 12c. Đổi ảnh đại diện (base64) → trả về hồ sơ người dùng đã cập nhật
+    uploadAvatar: builder.mutation<ApiResponse<User>, { base64: string; mime_type?: string }>({
+      query: (data) => ({
+        url: '/auth/avatar',
+        method: 'post',
+        data,
+        timeout: 60000,
+      }),
+      invalidatesTags: ['Profile'],
+    }),
+
     // 13. Xóa công thức (Soft delete vào Thùng rác)
     deleteMyRecipe: builder.mutation<ApiResponse, number | string>({
       query: (id) => ({
@@ -328,6 +339,7 @@ export const {
   useCreateMyRecipeMutation,
   useUpdateMyRecipeMutation,
   useUploadRecipeImageMutation,
+  useUploadAvatarMutation,
   useDeleteMyRecipeMutation,
   useRestoreMyRecipeMutation,
   useGetTrashRecipesQuery,

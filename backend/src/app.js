@@ -14,9 +14,9 @@ app.use(compression());
 
 // Ảnh món ăn gửi dạng base64 (≤5MB ảnh ≈ 7MB JSON) → route tải ảnh tự đọc body với giới hạn riêng,
 // mọi route khác giữ giới hạn mặc định 100KB
-const UPLOAD_IMAGE_PATH = "/api/library/upload-image";
+const UPLOAD_IMAGE_PATHS = new Set(["/api/library/upload-image", "/api/auth/avatar"]);
 const jsonParser = express.json();
-app.use((req, res, next) => (req.path === UPLOAD_IMAGE_PATH ? next() : jsonParser(req, res, next)));
+app.use((req, res, next) => (UPLOAD_IMAGE_PATHS.has(req.path) ? next() : jsonParser(req, res, next)));
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/api/health", (req, res) => {

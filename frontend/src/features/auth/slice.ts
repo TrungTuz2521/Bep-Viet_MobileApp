@@ -12,24 +12,43 @@ const initialState: AuthState = {
   error: null,
 };
 
-// 1.1 Xác thực token ở nền & cập nhật profile mới nhất (không chặn màn hình khởi động)
+// Thời điểm gia hạn phiên gần nhất (để khi app quay lại từ nền chỉ gia hạn khi đã lâu)
+let lastVerifiedAt = 0;
+export const SESSION_REFRESH_INTERVAL_MS = 12 * 60 * 60 * 1000;
+export const isSessionRefreshDue = () => Date.now() - lastVerifiedAt > SESSION_REFRESH_INTERVAL_MS;
+
+// 1.1 Xác thực + GIA HẠN phiên ở nền (không chặn màn hình khởi động):
+// token còn hạn → server cấp token mới 30 ngày + hồ sơ mới nhất.
+// Nhờ vậy còn mở app ít nhất 1 lần / 30 ngày thì không bao giờ bị đăng xuất.
 export const verifySessionThunk = createAsyncThunk(
   'auth/verifySession',
   async (token: string) => {
+    lastVerifiedAt = Date.now();
+    const headers = { Authorization: `Bearer ${token}` };
     try {
-      const res = await axiosInstance.get('/auth/profile', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const liveUser: User | null = res.data.data || null;
+      let liveUser: User | null = null;
+      let newToken: string | null = null;
+      try {
+        const res = await axiosInstance.post('/auth/refresh', null, { headers });
+        liveUser = res.data.data || null;
+        newToken = res.data.token || null;
+      } catch (e: any) {
+        // Server bản cũ chưa có /auth/refresh → chỉ xác thực như trước
+        if (e?.response?.status !== 404) throw e;
+        const res = await axiosInstance.get('/auth/profile', { headers });
+        liveUser = res.data.data || null;
+      }
+      if (newToken) await secureStorage.setToken(newToken);
       if (liveUser) await secureStorage.setUser(liveUser);
-      return { user: liveUser, expired: false };
+      return { user: liveUser, token: newToken, expired: false };
     } catch (e: any) {
       // 401/403: token hết hạn hoặc tài khoản bị khóa → đăng xuất.
       // Lỗi mạng (offline): giữ phiên đã lưu.
       const status = e?.response?.status;
       const expired = status === 401 || status === 403;
       if (expired) await secureStorage.clearAll();
-      return { user: null, expired };
+      else lastVerifiedAt = 0; // lỗi mạng → lần mở app / quay lại sau thử gia hạn tiếp
+      return { user: null, token: null, expired };
     }
   }
 );
@@ -62,6 +81,7 @@ export const restoreSessionThunk = createAsyncThunk(
           return null;
         }
         await secureStorage.setUser(liveUser);
+        dispatch(verifySessionThunk(token));
         return { token, user: liveUser };
       } catch {
         await secureStorage.clearAll();
@@ -82,6 +102,7 @@ export const loginThunk = createAsyncThunk(
       const { token, data: user } = res.data;
       if (token) await secureStorage.setToken(token);
       if (user) await secureStorage.setUser(user);
+      lastVerifiedAt = Date.now();
       return { token, user };
     } catch (err: any) {
       const msg = err.response?.data?.message || err.message || 'Đăng nhập thất bại';
@@ -104,6 +125,7 @@ export const registerThunk = createAsyncThunk(
       const { token, data: user } = loginRes.data;
       if (token) await secureStorage.setToken(token);
       if (user) await secureStorage.setUser(user);
+      lastVerifiedAt = Date.now();
       return { token, user };
     } catch (err: any) {
       const msg = err.response?.data?.message || err.message || 'Đăng ký thất bại';
@@ -126,6 +148,10 @@ export const authSlice = createSlice({
   reducers: {
     clearAuthError: (state) => {
       state.error = null;
+    },
+    // Cập nhật thông tin người dùng (vd sau khi đổi ảnh đại diện)
+    setUser: (state, action: PayloadAction<User>) => {
+      state.user = action.payload;
     },
     setCredentials: (
       state,
@@ -166,8 +192,9 @@ export const authSlice = createSlice({
           state.isAuthenticated = false;
           state.user = null;
           state.token = null;
-        } else if (action.payload.user) {
-          state.user = action.payload.user;
+        } else {
+          if (action.payload.user) state.user = action.payload.user;
+          if (action.payload.token) state.token = action.payload.token;
         }
       });
 
@@ -218,5 +245,5 @@ export const authSlice = createSlice({
   },
 });
 
-export const { clearAuthError, setCredentials } = authSlice.actions;
+export const { clearAuthError, setCredentials, setUser } = authSlice.actions;
 export default authSlice.reducer;

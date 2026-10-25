@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -66,7 +65,7 @@ export default function DeleteAccountScreen() {
       ]}
       edges={['top']}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior="padding"
         style={{ flex: 1 }}>
         <View style={styles.topBar}>
           <Pressable

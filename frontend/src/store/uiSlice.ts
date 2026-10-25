@@ -2,8 +2,10 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Appearance } from 'react-native';
 import { PendingAction } from '@/features/auth/types';
 
-// 'system' = theo cài đặt Sáng/Tối của điện thoại
-export type ThemePreference = 'system' | 'light' | 'dark';
+// Người dùng chọn Sáng hoặc Tối (lần đầu mở app lấy theo cài đặt của điện thoại)
+export type ThemePreference = 'light' | 'dark';
+
+const deviceTheme = (): ThemePreference => (Appearance.getColorScheme() === 'dark' ? 'dark' : 'light');
 
 interface UIState {
   isDarkMode: boolean;
@@ -14,8 +16,8 @@ interface UIState {
 
 const initialState: UIState = {
   // Khởi tạo theo hệ thống để không bị nháy trắng khi mở app ở chế độ tối
-  isDarkMode: Appearance.getColorScheme() === 'dark',
-  themePreference: 'system',
+  isDarkMode: deviceTheme() === 'dark',
+  themePreference: deviceTheme(),
   pendingAction: null,
   returnTo: null,
 };

@@ -44,10 +44,10 @@ async function ensureBucket() {
 }
 
 /**
- * Nhận ảnh base64 từ app → lưu vào <bucket>/<userId>/<thời điểm>-<ngẫu nhiên>.<đuôi>
+ * Nhận ảnh base64 từ app → lưu vào <bucket>/<prefix>/<thời điểm>-<ngẫu nhiên>.<đuôi>
  * @returns {Promise<string>} URL công khai của ảnh
  */
-async function uploadRecipeImage(userId, base64, mimeType) {
+async function uploadImage(prefix, base64, mimeType) {
     const supabase = getClient();
     if (!supabase) throw httpError(503, "Máy chủ chưa cấu hình lưu ảnh (thiếu SUPABASE_SERVICE_ROLE_KEY).");
 
@@ -59,7 +59,7 @@ async function uploadRecipeImage(userId, base64, mimeType) {
     if (buffer.length === 0) throw httpError(400, "Ảnh không hợp lệ.");
     if (buffer.length > MAX_IMAGE_BYTES) throw httpError(413, "Ảnh quá lớn (tối đa 5MB). Hãy chọn ảnh khác hoặc cắt nhỏ lại.");
 
-    const path = `${userId}/${Date.now()}-${crypto.randomBytes(4).toString("hex")}.${ext}`;
+    const path = `${prefix}/${Date.now()}-${crypto.randomBytes(4).toString("hex")}.${ext}`;
     const upload = () => supabase.storage.from(BUCKET).upload(path, buffer, {
         contentType: mime,
         cacheControl: "31536000",
@@ -77,4 +77,32 @@ async function uploadRecipeImage(userId, base64, mimeType) {
     return supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
 }
 
-module.exports = { BUCKET, MAX_IMAGE_BYTES, ensureBucket, uploadRecipeImage, supabaseUrl };
+/** Ảnh món: <userId>/... */
+const uploadRecipeImage = (userId, base64, mimeType) => uploadImage(String(userId), base64, mimeType);
+
+/** Ảnh đại diện: avatars/<userId>/... */
+const uploadAvatarImage = (userId, base64, mimeType) => uploadImage(`avatars/${userId}`, base64, mimeType);
+
+/**
+ * Xoá ảnh cũ trong bucket của app (bỏ qua URL ngoài, vd ảnh mặc định). Không ném lỗi:
+ * xoá thất bại chỉ để lại 1 file thừa, không ảnh hưởng người dùng.
+ */
+async function removeStoredImage(url) {
+    const supabase = getClient();
+    const marker = `/storage/v1/object/public/${BUCKET}/`;
+    const idx = String(url || "").indexOf(marker);
+    if (!supabase || idx < 0) return;
+    const path = decodeURIComponent(String(url).slice(idx + marker.length).split("?")[0]);
+    await supabase.storage.from(BUCKET).remove([path]).catch(() => {});
+}
+
+module.exports = {
+    BUCKET,
+    MAX_IMAGE_BYTES,
+    ensureBucket,
+    uploadImage,
+    uploadRecipeImage,
+    uploadAvatarImage,
+    removeStoredImage,
+    supabaseUrl,
+};

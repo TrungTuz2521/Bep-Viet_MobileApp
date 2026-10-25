@@ -9,7 +9,6 @@ import {
 import { Text } from '@/components/ui/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { logoutThunk } from '@/features/auth/slice';
@@ -18,9 +17,9 @@ import { saveThemePreference } from '@/lib/themePreference';
 import { Button } from '@/components/ui/Button';
 import { shadow } from '@/lib/shadows';
 import { useThemeColors } from '@/lib/theme';
+import { ProfileAvatar } from '@/features/auth/components/ProfileAvatar';
 
 const THEME_OPTIONS: { value: ThemePreference; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { value: 'system', label: 'Hệ thống', icon: 'phone-portrait-outline' },
   { value: 'light', label: 'Sáng', icon: 'sunny-outline' },
   { value: 'dark', label: 'Tối', icon: 'moon-outline' },
 ];
@@ -76,13 +75,7 @@ export default function ProfileScreen() {
                 borderColor: isDarkMode ? '#2D2D2D' : '#E5E7EB',
               },
             ]}>
-            <Image
-              source={{
-                uri: user.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80',
-              }}
-              style={styles.avatar}
-              contentFit="cover"
-            />
+            <ProfileAvatar user={user} />
             <View style={styles.userInfo}>
               <Text style={[styles.userName, { color: isDarkMode ? '#F9FAFB' : '#111827' }]}>
                 {user.name}
@@ -154,7 +147,7 @@ export default function ProfileScreen() {
               </Text>
             </View>
           </View>
-          {/* Bộ chọn 3 lựa chọn: theo hệ thống / sáng / tối */}
+          {/* Bộ chọn giao diện: Sáng / Tối */}
           <View
             accessibilityRole="radiogroup"
             style={[styles.themeSegment, { backgroundColor: isDarkMode ? '#27272A' : '#F3F4F6' }]}>
@@ -307,11 +300,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     gap: 16,
     marginBottom: 20,
-  },
-  avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
   },
   userInfo: {
     flex: 1,

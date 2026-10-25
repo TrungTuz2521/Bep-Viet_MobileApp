@@ -1,9 +1,8 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
   KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -126,6 +125,13 @@ export default function AssistantScreen() {
 
   const scrollToEnd = (delay: number) =>
     setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), delay);
+
+  // Bàn phím mở → danh sách co lại; kéo xuống tin nhắn mới nhất để không bị khuất
+  useEffect(() => {
+    if (!isKeyboardVisible) return;
+    const timer = scrollToEnd(80);
+    return () => clearTimeout(timer);
+  }, [isKeyboardVisible]);
 
   const handleSend = async (queryToSend?: string) => {
     const q = (queryToSend || inputQuery).trim();
@@ -327,9 +333,11 @@ export default function AssistantScreen() {
         </View>
       )}
 
+      {/* padding cho cả Android: app chạy edge-to-edge nên cửa sổ không tự co khi bàn phím mở
+          → thiếu padding thì bàn phím che thanh nhập */}
       <KeyboardAvoidingView
         style={styles.keyboardContainer}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        behavior="padding">
         {/* 2. Danh sách tin nhắn */}
         <FlatList
           ref={flatListRef}

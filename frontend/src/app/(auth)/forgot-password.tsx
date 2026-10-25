@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -46,7 +45,7 @@ export default function ForgotPasswordScreen() {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior="padding"
       style={[
         styles.container,
         { backgroundColor: isDarkMode ? '#121212' : '#FFFFFF' },
