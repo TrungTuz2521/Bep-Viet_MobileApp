@@ -1,0 +1,218 @@
+{
+    "info": {
+        "name": "Food App v2 API - Schema Synchronized",
+        "description": "Postman Collection hoàn chỉnh cho Food App sau khi đồng bộ với schema PostgreSQL mới.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "1. Auth & Account",
+            "item": [
+                {
+                    "name": "Register",
+                    "request": {
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "url": {"raw": "http://localhost:5000/api/auth/register", "host": ["http://localhost:5000"], "path": ["api", "auth", "register"]},
+                        "body": {"mode": "raw", "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"123456\",\n  \"name\": \"Đầu Bếp Gia Đình\"\n}"}
+                    }
+                },
+                {
+                    "name": "Login",
+                    "request": {
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "url": {"raw": "http://localhost:5000/api/auth/login", "host": ["http://localhost:5000"], "path": ["api", "auth", "login"]},
+                        "body": {"mode": "raw", "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"123456\"\n}"}
+                    }
+                },
+                {
+                    "name": "Get Profile",
+                    "request": {
+                        "method": "GET",
+                        "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                        "url": {"raw": "http://localhost:5000/api/auth/profile", "host": ["http://localhost:5000"], "path": ["api", "auth", "profile"]}
+                    }
+                },
+                {
+                    "name": "Change Password",
+                    "request": {
+                        "method": "PUT",
+                        "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}],
+                        "url": {"raw": "http://localhost:5000/api/auth/change-password", "host": ["http://localhost:5000"], "path": ["api", "auth", "change-password"]},
+                        "body": {"mode": "raw", "raw": "{\n  \"oldPassword\": \"123456\",\n  \"newPassword\": \"654321\"\n}"}
+                    }
+                },
+                {
+                    "name": "Delete Account (30-day retention)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}],
+                        "url": {"raw": "http://localhost:5000/api/auth/account", "host": ["http://localhost:5000"], "path": ["api", "auth", "account"]},
+                        "body": {"mode": "raw", "raw": "{\n  \"password\": \"123456\"\n}"}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "2. Preferences & Allergies",
+            "item": [
+                {
+                    "name": "Get Preferences",
+                    "request": {
+                        "method": "GET",
+                        "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                        "url": {"raw": "http://localhost:5000/api/user/preferences", "host": ["http://localhost:5000"], "path": ["api", "user", "preferences"]}
+                    }
+                },
+                {
+                    "name": "Update Preferences (Diet & Allergies)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}],
+                        "url": {"raw": "http://localhost:5000/api/user/preferences", "host": ["http://localhost:5000"], "path": ["api", "user", "preferences"]},
+                        "body": {"mode": "raw", "raw": "{\n  \"preferred_diet_type\": \"omnivore\",\n  \"preferred_tastes\": \"spicy,savory\",\n  \"allergy_ingredient_ids\": [],\n  \"favorite_category_ids\": []\n}"}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "3. Recipes (Discover, List & Search)",
+            "item": [
+                {
+                    "name": "List Recipes (Pagination, Allergy, Category CTE, Sort)",
+                    "request": {
+                        "method": "GET",
+                        "header": [{"key": "Authorization", "value": "Bearer {{token}}", "disabled": true}],
+                        "url": {"raw": "http://localhost:5000/api/recipes?page=1&limit=20&sort_by=popularity_score&order=DESC&category=mon-lau", "host": ["http://localhost:5000"], "path": ["api", "recipes"], "query": [{"key": "page", "value": "1"}, {"key": "limit", "value": "20"}, {"key": "sort_by", "value": "popularity_score"}, {"key": "order", "value": "DESC"}, {"key": "category", "value": "mon-lau"}]}
+                    }
+                },
+                {
+                    "name": "Discover (Popular, Quick Meals, Recommended)",
+                    "request": {
+                        "method": "GET",
+                        "header": [{"key": "Authorization", "value": "Bearer {{token}}", "disabled": true}],
+                        "url": {"raw": "http://localhost:5000/api/recipes/discover", "host": ["http://localhost:5000"], "path": ["api", "recipes", "discover"]}
+                    }
+                },
+                {
+                    "name": "Search Recipes",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {"raw": "http://localhost:5000/api/recipes/search?query=gà&max_time=45&difficulty=easy", "host": ["http://localhost:5000"], "path": ["api", "recipes", "search"], "query": [{"key": "query", "value": "gà"}, {"key": "max_time", "value": "45"}, {"key": "difficulty", "value": "easy"}]}
+                    }
+                },
+                {
+                    "name": "Get Categories Tree",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {"raw": "http://localhost:5000/api/recipes/categories", "host": ["http://localhost:5000"], "path": ["api", "recipes", "categories"]}
+                    }
+                },
+                {
+                    "name": "Get Recipe Details (Allergy warning check)",
+                    "request": {
+                        "method": "GET",
+                        "header": [{"key": "Authorization", "value": "Bearer {{token}}", "disabled": true}],
+                        "url": {"raw": "http://localhost:5000/api/recipes/ga-kho-gung", "host": ["http://localhost:5000"], "path": ["api", "recipes", "ga-kho-gung"]}
+                    }
+                },
+                {
+                    "name": "Finish Cooking (cook_completed action)",
+                    "request": {
+                        "method": "POST",
+                        "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                        "url": {"raw": "http://localhost:5000/api/recipes/RECIPE_UUID_HERE/finish-cooking", "host": ["http://localhost:5000"], "path": ["api", "recipes", "RECIPE_UUID_HERE", "finish-cooking"]}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "4. Library (Saved & My Recipes)",
+            "item": [
+                {
+                    "name": "Get Saved Recipes",
+                    "request": {
+                        "method": "GET",
+                        "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                        "url": {"raw": "http://localhost:5000/api/library/saved", "host": ["http://localhost:5000"], "path": ["api", "library", "saved"]}
+                    }
+                },
+                {
+                    "name": "Save Recipe",
+                    "request": {
+                        "method": "POST",
+                        "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}],
+                        "url": {"raw": "http://localhost:5000/api/library/saved", "host": ["http://localhost:5000"], "path": ["api", "library", "saved"]},
+                        "body": {"mode": "raw", "raw": "{\n  \"recipe_id\": \"RECIPE_UUID_HERE\"\n}"}
+                    }
+                },
+                {
+                    "name": "Unsave Recipe",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                        "url": {"raw": "http://localhost:5000/api/library/saved/RECIPE_UUID_HERE", "host": ["http://localhost:5000"], "path": ["api", "library", "saved", "RECIPE_UUID_HERE"]}
+                    }
+                },
+                {
+                    "name": "Get My Recipes",
+                    "request": {
+                        "method": "GET",
+                        "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                        "url": {"raw": "http://localhost:5000/api/library/my", "host": ["http://localhost:5000"], "path": ["api", "library", "my"]}
+                    }
+                },
+                {
+                    "name": "Create My Recipe (Unique step_order validation)",
+                    "request": {
+                        "method": "POST",
+                        "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}],
+                        "url": {"raw": "http://localhost:5000/api/library/my", "host": ["http://localhost:5000"], "path": ["api", "library", "my"]},
+                        "body": {"mode": "raw", "raw": "{\n  \"name\": \"Gà Xào Sả Ớt Miền Trung\",\n  \"description\": \"Món ngon cay nồng đậm đà\",\n  \"difficulty\": \"easy\",\n  \"diet_type\": \"omnivore\",\n  \"prep_time_minutes\": 15,\n  \"cook_time_minutes\": 20,\n  \"ingredients\": [\n    {\n      \"ingredient_id\": \"INGREDIENT_UUID_HERE\",\n      \"quantity\": 500,\n      \"unit\": \"g\",\n      \"group_name\": \"Nguyên liệu chính\",\n      \"is_optional\": false\n    }\n  ],\n  \"steps\": [\n    {\n      \"step_order\": 1,\n      \"description\": \"Sơ chế thịt gà, băm sả ớt\",\n      \"duration_seconds\": 300\n    },\n    {\n      \"step_order\": 2,\n      \"description\": \"Xào sả ớt dậy mùi thơm rồi cho gà vào đảo săn\",\n      \"duration_seconds\": 600\n    }\n  ]\n}"}
+                    }
+                },
+                {
+                    "name": "Delete My Recipe (To Trash)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                        "url": {"raw": "http://localhost:5000/api/library/my/RECIPE_UUID_HERE", "host": ["http://localhost:5000"], "path": ["api", "library", "my", "RECIPE_UUID_HERE"]}
+                    }
+                },
+                {
+                    "name": "Get Trash Recipes",
+                    "request": {
+                        "method": "GET",
+                        "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                        "url": {"raw": "http://localhost:5000/api/library/trash", "host": ["http://localhost:5000"], "path": ["api", "library", "trash"]}
+                    }
+                },
+                {
+                    "name": "Restore My Recipe",
+                    "request": {
+                        "method": "POST",
+                        "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                        "url": {"raw": "http://localhost:5000/api/library/my/RECIPE_UUID_HERE/restore", "host": ["http://localhost:5000"], "path": ["api", "library", "my", "RECIPE_UUID_HERE", "restore"]}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "5. AI Chatbot Assistant",
+            "item": [
+                {
+                    "name": "Chatbot Discover Assistant",
+                    "request": {
+                        "method": "POST",
+                        "header": [{"key": "Authorization", "value": "Bearer {{token}}", "disabled": true}, {"key": "Content-Type", "value": "application/json"}],
+                        "url": {"raw": "http://localhost:5000/api/chatbot/discover", "host": ["http://localhost:5000"], "path": ["api", "chatbot", "discover"]},
+                        "body": {"mode": "raw", "raw": "{\n  \"query\": \"Tôi có thịt gà, sả, muốn nấu món ăn nhanh dưới 30 phút\"\n}"}
+                    }
+                }
+            ]
+        }
+    ]
+}

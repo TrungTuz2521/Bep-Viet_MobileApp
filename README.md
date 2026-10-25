@@ -377,6 +377,6 @@ eas build --profile preview --platform android
 
 <div align="center">
 
-Phát triển bởi **[TrungTuz2521](https://github.com/TrungTuz2521)** · Dự án học tập
+Phát triển bởi **[TrungTuz2521](https://github.com/TrungTuz2521)** · Dự án học tập · Giấy phép [MIT](LICENSE)
 
 </div>

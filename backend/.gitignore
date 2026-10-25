@@ -1,0 +1,4 @@
+# Bí mật (mật khẩu DB, JWT secret, GEMINI_API_KEY) — KHÔNG đưa lên git
+.env
+
+node_modules/
