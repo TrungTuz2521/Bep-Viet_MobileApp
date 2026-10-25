@@ -1,0 +1,26 @@
+# Bí mật — KHÔNG BAO GIỜ đưa lên git
+.env
+.env.*
+!.env.example
+
+# Thư viện & sản phẩm build
+node_modules/
+dist/
+web-build/
+.expo/
+/frontend/android/
+/frontend/ios/
+*.jks
+*.keystore
+*.p8
+*.p12
+*.pem
+*.key
+
+# Cá nhân / không cần
+.claude/
+_backup_unused_template/
+.DS_Store
+*.log
+
+.git_backup/

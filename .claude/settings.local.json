@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -)",
+      "Bash(npx expo *)",
+      "Bash(python -c ' *)",
+      "Bash(grep -v \"^//#\")",
+      "Bash(PYTHONIOENCODING=utf-8 python -)"
+    ]
+  }
+}
